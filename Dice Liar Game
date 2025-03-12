@@ -1,0 +1,66 @@
+import random
+
+def roll_dice(num_dice):
+    return [random.randint(1, 6) for _ in range(num_dice)]
+
+def count_dice(all_hands):
+    count = {i: 0 for i in range(1, 7)}
+    for hand in all_hands:
+        for die in hand:
+            count[die] += 1
+    return count
+
+def print_hand(player, hand):
+    print(f"Играч {player}, твоите зарове: {hand}")
+
+def liar_dice_game(num_players):
+    players = {i: 5 for i in range(1, num_players + 1)}  # Всеки играч започва с 5 зара
+    current_player = 1
+    last_bid = None
+    
+    while len(players) > 1:
+        hands = {p: roll_dice(players[p]) for p in players}
+        
+        for p in players:
+            print_hand(p, hands[p])
+        
+        bid_valid = False
+        while not bid_valid:
+            print(f"Играч {current_player}, твой ход!")
+            if last_bid:
+                print(f"Последният залог беше: {last_bid}")
+            
+            action = input("Въведи 'заложи' или 'лъжец': ").strip().lower()
+            
+            if action == "лъжец" and last_bid:
+                all_counts = count_dice(hands.values())
+                if all_counts[last_bid[1]] >= last_bid[0]:
+                    print(f"Залогът беше верен! Играч {current_player} губи един зар.")
+                    players[current_player] -= 1
+                else:
+                    loser = last_bid[2]
+                    print(f"Залогът беше грешен! Играч {loser} губи един зар.")
+                    players[loser] -= 1
+                
+                if players[current_player] == 0:
+                    del players[current_player]
+                current_player = list(players.keys())[0]
+                last_bid = None
+                break
+            elif action == "заложи":
+                quantity = int(input("Въведи количество: "))
+                face = int(input("Въведи стойност (1-6): "))
+                if last_bid is None or (quantity > last_bid[0] or (quantity == last_bid[0] and face > last_bid[1])):
+                    last_bid = (quantity, face, current_player)
+                    current_player = list(players.keys())[(list(players.keys()).index(current_player) + 1) % len(players)]
+                    bid_valid = True
+                else:
+                    print("Трябва да заложиш по-високо!")
+            else:
+                print("Невалиден ход. Опитай отново.")
+    
+    print(f"Победител е играч {list(players.keys())[0]}!")
+
+# Стартиране на играта
+num_players = int(input("Въведи брой играчи: "))
+liar_dice_game(num_players)
